@@ -1,33 +1,13 @@
-#-----------------------------------------------------------------
-# Class::Data::TIN
-#-----------------------------------------------------------------
-# Copyright Thomas Klausner / ZSI 2001, 2002
-# You may use and distribute this module according to the same terms
-# that Perl is distributed under.
-#
-# Thomas Klausner domm@zsi.at http://domm.zsi.at
-#
-# $Author: domm $
-# $Date: 2002/07/15 22:18:30 $
-# $Revision: 1.16 $
-#-----------------------------------------------------------------
-# Class::Data::TIN - T_ranslucent I_nheritable N_onpolluting
-#-----------------------------------------------------------------
-
-# TODO:
-# * add docu for merge
-# * add docu for multiget
-# * add docu for appending a SCALAR REF
-
-# BUGS:
-# * set_classdata, no_multi not working if key allready exists in package
-# * weird behavior of hashes and multiget/set if key allready exists in package
-
 package Class::Data::TIN;
+
+# ABSTRACT: DEPRECATED - Translucent, Inheritable, Nonpolluting class data
+# VERSION
 
 use 5.006;
 use strict;
 use warnings;
+
+warn __PACKAGE__ .' is DEPRECATED, please do not use this module anymore';
 
 use Class::DispatchToAll qw(dispatch_to_all);
 
@@ -37,7 +17,6 @@ use Carp;
 use Data::Dumper;
 
 our @ISA = qw(Exporter);
-our $VERSION = '0.05';
 our @EXPORT_OK = ('get_classdata','set_classdata','append_classdata','merge_classdata');
 
 our $stop="_tinstop";
@@ -102,7 +81,6 @@ sub _import_data {
    return $data;
 }
 
-
 sub _save_val {
     my ($pkg,$key,$val,$stopper)=@_;
 
@@ -139,7 +117,6 @@ sub _make_accessor {
     };
     return;
 }
-
 
 # ueberschreibt den aktuellen Wert in der package mit dem neuen
 # geht mit einem wert
@@ -322,131 +299,8 @@ sub _get_CODE {
     return $val;
 }
 
-
-__END__
-
-=pod
-
-sub multiget_classdata {return 1;}
-
-
-
-sub nmultiget_classdata {
-    my ($self,$key)=@_;
-    my $org_pack=ref($self) || $self;
-    my @vals;
-
-    # get first value
-    my $used_isas;
-    my ($first_v,$nm,$p)=_get_val($self,$key);
-    return $first_v if $nm;
-
-    $used_isas.=$p if $first_v;
-    my @isa=eval "@".$org_pack."::ISA";
-    if (@isa > 1) {
-	foreach my $package (@isa) {
-	    next unless $package;
-	    next if $used_isas && $used_isas=~/$package/;
-	    my $s=bless {},$package;
-	    my ($v,$nm,$p)=_get_val($s,$key);
-	    next unless $v;
-	    $used_isas.=$p;
-	    return $v if $nm;
-	    push(@vals,$v) if $v;
-	}
-	$self=bless {},$org_pack;
-    }
-    push(@vals,$first_v) if $first_v;
-    return unless @vals > 0;
-
-    my ($result,%seen);
-    foreach my $v (@vals) {
-	next if $seen{$v};
-	$seen{$v}=1;
-	if (!ref($v)) {
-	    $result=(!$result)?
-	      $v:
-	      $result.$v;
-	} elsif (ref($v) eq "SCALAR") {
-	    $result=$$v;
-	} elsif (ref($v) eq "ARRAY") {
-	    $result=(ref($result) eq "ARRAY") ?
-	      ([@$result,@$v]):
-		$v;
-       	} elsif (ref($v) eq "HASH") {
-	    $result=(ref($result) eq "HASH") ?
-	      ({%$result,%$v}):
-		$v;
-	} else {
-	    $result=$v;
-	}
-    }
-
-    # remove dups caused by multiple inheritance
-    if (ref($result) eq "ARRAY") {
-	my %seen;
-	my @nodup;
-	foreach(@$result){
-	    push(@nodup,$_) unless $seen{$_};
-	    $seen{$_}=1;
-	}
-	$result=\@nodup;
-    }
-    return $result;
-}
-
-
-
-
-
-
-
-# exported, has to be called on object or class, NOT on Class::Data::TIN
-sub append_classdata {
-    return set_classdata(@_);
-
-
-
-
-    my ($self,$key)=@_;
-    my $package=ref($self) || $self;
-
-    croak "object not allowed to modify class data" if (ref($self));
-
-    my $tin=__PACKAGE__."::".$package;
-
-    # if this key is not here, there's no use appending, so use set()
-    unless ($tin->can($key)) {
-	return set_classdata($self,$key,$newval);
-    }
-
-    my $val;
-
-    # get old value
-    my ($nm,$p);
-    ($val,$nm,$p)=$tin->$key();
-    #print "APPEND old $val $newval $$newval\n" if $key eq 'string2';
-    # copy on write:
-    _make_accessor($tin,$key);
-
-    # save new val:
-    _save_val($tin,$key,$val);
-
-    return $tin->$key();
-
-
-
-
-}
-
-=cut
-
 1;
 __END__
-
-=head1 NAME
-
-Class::Data::TIN - Translucent Inheritable Nonpolluting Class Data
 
 =head1 SYNOPSIS
 
@@ -493,6 +347,10 @@ Class::Data::TIN - Translucent Inheritable Nonpolluting Class Data
 
 
 =head1 DESCRIPTION
+
+THIS MODULE IS DEPRECATED! I used it the last time ~20 years ago, and if I needed a similar functionality now, I would use Moose and/or some meta programming.
+
+But here are the old docs, anyway:
 
 Class::Data::TIN implements Translucent Inheritable Nonpolluting Class Data.
 
@@ -577,30 +435,8 @@ None by default.
 
 get get_classdata set set_classdata append append_classdata, if you ask for it
 
-=head2 INSTALLATION
-
-To install this module type the following:
-
-   perl Makefile.PL
-   make
-   make test
-   make install
-
-
 =head1 SEE ALSO
 
 perltootc, Class::Data::Inheritable
-
-=head1 AUTHOR
-
-Thomas Klausner, domm@zsi.at, http://domm.zsi.at
-
-=head1 COPYRIGHT
-
-Class::Data::TIN is Copyright (c) 2002 Thomas Klausner, ZSI.
-All rights reserved.
-
-You may use and distribute this module according to the same terms
-that Perl is distributed under
 
 =cut
