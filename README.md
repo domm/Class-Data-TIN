@@ -151,6 +151,10 @@ the same terms as the Perl 5 programming language system itself.
 
 Hey! **The above document had some coding errors, which are explained below:**
 
+<<<<<<< HEAD
 - Around line 137:
+=======
+- Around line 135:
+>>>>>>> eea5b8a683f20b7ecb79069ed97d5f742273c867
 
     &#x3d;back doesn't take any parameters, but you said =back 4
